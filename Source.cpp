@@ -1,4 +1,4 @@
-// DBMS v.0.01 by Skup
+﻿// DBMS v.0.01 by Skup
 //
 // SOURCE.CPP
 //
@@ -12,8 +12,10 @@ struct Account			// The structure of the database row
 {
 	int acctNum;			// the client's account number
 	char lastName[15];		// the client's last name
-	char firstName[10];		// the client's first name
+	char firstName[15];		// the client's first name
 	float balance;			// the client's balance
+
+	char *nameOfColumn[4] = { "Name", "Last Name", "First Name", "Balance" };
 };
 
 class clientFile		// the main class of DBMS
@@ -30,20 +32,49 @@ public:
 	int showRecord(fstream &file);
 	bool isDatabaseExist(const char *);
 	int connectToDatabase(fstream &file);
-	void tableHeader(void) const
+	void tableHeader(const Account &client, int *widthValuesArray,  int numberOfColumns) const	// print header to each column
 	{
-		cout << "\xC9" << setfill('\xCD') << setw(6) << '\xCB' << setw(16) << '\xCB' << setw(11) << '\xCB' << setw(11) << "\xCD\xBB" << endl
-			 << setfill(' ') << setiosflags(ios::left)
-			 << '\xBA' << setw(5) << "Number"
-			 << '\xBA' << setw(15) << "Last name"
-			 << '\xBA' << setw(10) << "First name"
-			 << '\xBA' << setw(10) << setiosflags(ios::fixed | ios::showpoint)
-			 << setprecision(2) << "Balance" << '\xBA'
-			 << setiosflags(ios::right) << endl
-			 << "\xC8" << setfill('\xCD') << setw(6) << '\xCA' << setw(16) << '\xCA' << setw(11) << '\xCA' << setw(11) << "\xCD\xBC" << endl;
+		// print header's upper line
+		cout << "\xC9" << setfill('\xCD');			// \xC9 = "╔", \xCD = "═"
+		for (int i = 0; i < numberOfColumns; i++)
+		{
+			cout << setw(widthValuesArray[i]) << '\xCB';	// \xCB = "╦"
+		}
+		cout << "\xBB" << endl;		// \xBB = "╗"
+		
+		// print name of each column
+		cout << '\xCB' << setfill(' ') << setiosflags(ios::left)	// \xCB = "╦"
+			<< setiosflags(ios::fixed | ios::showpoint)			// set precision and flags to print float values
+			<< setprecision(2);
+
+		for (int i = 0; i < numberOfColumns; i++)
+		{
+			cout << setw(widthValuesArray[i]) << '\xBA';	// \xBA = "║"
+			cout << client.nameOfColumn[i];		
+		}
+		cout << '\xBA' << endl;		// \xBA = "║"
+			
+		// print header's bottom line
+		cout << '\xCC' << setfill('\xCD');	// \xCC = "╠",  \xCD = "═"
+		for (int i = 0; i < numberOfColumns; i++)
+		{
+			cout << setw(widthValuesArray[i]) << '\xCE';	// \xCE = "╬"
+		}
+		cout << '\xB9' << endl;		// \xB9 = "╣"
+
+		cout << setiosflags(ios::right) << endl;
 	}
 	void outputLine(Account &client) const
 	{
+		const int numberOfColumns = 4;
+		int additionalPositions = 3;
+		int widthNumberField = sizeof(client.acctNum) + additionalPositions;
+		int widthLastNameField = sizeof(client.lastName) + additionalPositions;
+		int widthFirstNameField = sizeof(client.firstName) + additionalPositions;
+		int widthBalanceField = sizeof(client.balance) + additionalPositions;
+
+		int widthValuesArray[numberOfColumns] = { widthNumberField, widthLastNameField, widthFirstNameField, widthBalanceField };
+
 		cout << "PSEUDO" << endl;
 		char ascii[256];
 		for (int i = 0; i < 256; i++)
@@ -52,16 +83,16 @@ public:
 			cout << "[" << hex << i << "] = " << ascii[i] << endl;
 		}
 
-		tableHeader();
-		cout << "\xC9" << setfill('\xCD') << setw(6) << '\xCB' << setw(16) << '\xCB' << setw(11) << '\xCB' << setw(11) << "\xCD\xBB" << endl
+		tableHeader(client, widthValuesArray, numberOfColumns);
+		cout << "\xC9" << setfill('\xCD') << setw(7) << '\xCB' << setw(17) << '\xCB' << setw(12) << '\xCB' << setw(12) << "\xCD\xBB" << endl
 			 << setfill(' ') << setiosflags(ios::left) 
-			 << '\xBA' << setw(5) << client.acctNum 
-			 << '\xBA' << setw(15) << client.lastName
-			 << '\xBA' << setw(10) << client.firstName
-			 << '\xBA' << setw(10) << setiosflags(ios::fixed | ios::showpoint)
+			 << '\xBA' << setw(widthNumberField) << client.acctNum
+			 << '\xBA' << setw(widthLastNameField) << client.lastName
+			 << '\xBA' << setw(widthFirstNameField) << client.firstName
+			 << '\xBA' << setw(widthBalanceField) << setiosflags(ios::fixed | ios::showpoint)
 			 << setprecision(2) << client.balance << '\xBA'
 			 << setiosflags(ios::right) << endl
-			 << "\xC8" << setfill('\xCD') << setw(6) << '\xCA' << setw(16) << '\xCA' << setw(11) << '\xCA' << setw(11) << "\xCD\xBC" << endl;
+			 << "\xC8" << setfill('\xCD') << setw(7) << '\xCA' << setw(17) << '\xCA' << setw(12) << '\xCA' << setw(12) << "\xCD\xBC" << endl;
 	}
 	//int showDBNamesList(void);
 
