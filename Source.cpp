@@ -8,15 +8,17 @@
 
 # include "libs.h"		// include all the necessary libraries and headers
 
-struct Account			// The structure of the database row
-{
-	int acctNum;			// the client's account number
-	char lastName[15];		// the client's last name
-	char firstName[15];		// the client's first name
-	float balance;			// the client's balance
+char VARIABLE_NAME[15] = { "NULL" };
+# define GET_VARIABLE_NAME(variable) strcpy(VARIABLE_NAME, variable);
 
-	char *nameOfColumn[4] = { "Name", "Last Name", "First Name", "Balance" };
+struct Account
+{
+	int acctNum;
+	char lastName[15];
+	char firstName[15];
+	float balance;
 };
+
 
 class clientFile		// the main class of DBMS
 {
@@ -32,27 +34,42 @@ public:
 	int showRecord(fstream &file);
 	bool isDatabaseExist(const char *);
 	int connectToDatabase(fstream &file);
-	void tableHeader(const Account &client, int *widthValuesArray,  int numberOfColumns) const	// print header to each column
+
+	void printTableHeader(int *widthValuesArray, int numberOfColumns) const
 	{
+		char *nameOfColumn[4] = { "acct_num", "last_name", "first_name", "balance" };
+
 		// print header's upper line
 		cout << "\xC9" << setfill('\xCD');			// \xC9 = "╔", \xCD = "═"
 		for (int i = 0; i < numberOfColumns; i++)
 		{
-			cout << setw(widthValuesArray[i]) << '\xCB';	// \xCB = "╦"
+			cout << setw(widthValuesArray[i]);
+
+			if (i == (numberOfColumns - 1))
+				cout << '\xCD';		//  \xCD = "═"
+			else
+				cout << '\xCB';		// \xCB = "╦"
 		}
 		cout << "\xBB" << endl;		// \xBB = "╗"
-		
+
 		// print name of each column
-		cout << '\xCB' << setfill(' ') << setiosflags(ios::left)	// \xCB = "╦"
+		cout << setfill(' ') << setiosflags(ios::left)
 			<< setiosflags(ios::fixed | ios::showpoint)			// set precision and flags to print float values
 			<< setprecision(2);
 
 		for (int i = 0; i < numberOfColumns; i++)
 		{
-			cout << setw(widthValuesArray[i]) << '\xBA';	// \xBA = "║"
-			cout << client.nameOfColumn[i];		
+			cout << setw(widthValuesArray[i] - 8) << '\xBA';	// \xBA = "║"
+			cout << left << nameOfColumn[i];
 		}
 		cout << '\xBA' << endl;		// \xBA = "║"
+	}
+	/*
+	void tableHeader(const Account &client, int *widthValuesArray,  int numberOfColumns) const	// print header to each column
+	{
+		
+		
+	
 			
 		// print header's bottom line
 		cout << '\xCC' << setfill('\xCD');	// \xCC = "╠",  \xCD = "═"
@@ -64,14 +81,15 @@ public:
 
 		cout << setiosflags(ios::right) << endl;
 	}
+	*/
 	void outputLine(Account &client) const
 	{
 		const int numberOfColumns = 4;
-		int additionalPositions = 3;
-		int widthNumberField = sizeof(client.acctNum) + additionalPositions;
-		int widthLastNameField = sizeof(client.lastName) + additionalPositions;
-		int widthFirstNameField = sizeof(client.firstName) + additionalPositions;
-		int widthBalanceField = sizeof(client.balance) + additionalPositions;
+		int additionalWidth = 7;
+		int widthNumberField = additionalWidth + sizeof(client.acctNum);
+		int widthLastNameField = additionalWidth + sizeof(client.lastName);
+		int widthFirstNameField = additionalWidth + sizeof(client.firstName);
+		int widthBalanceField = additionalWidth + sizeof(client.balance);
 
 		int widthValuesArray[numberOfColumns] = { widthNumberField, widthLastNameField, widthFirstNameField, widthBalanceField };
 
@@ -83,7 +101,8 @@ public:
 			cout << "[" << hex << i << "] = " << ascii[i] << endl;
 		}
 
-		tableHeader(client, widthValuesArray, numberOfColumns);
+		printTableHeader(widthValuesArray, numberOfColumns);
+		/*
 		cout << "\xC9" << setfill('\xCD') << setw(7) << '\xCB' << setw(17) << '\xCB' << setw(12) << '\xCB' << setw(12) << "\xCD\xBB" << endl
 			 << setfill(' ') << setiosflags(ios::left) 
 			 << '\xBA' << setw(widthNumberField) << client.acctNum
@@ -93,12 +112,8 @@ public:
 			 << setprecision(2) << client.balance << '\xBA'
 			 << setiosflags(ios::right) << endl
 			 << "\xC8" << setfill('\xCD') << setw(7) << '\xCA' << setw(17) << '\xCA' << setw(12) << '\xCA' << setw(12) << "\xCD\xBC" << endl;
+		*/
 	}
-	//int showDBNamesList(void);
-
-private:
-	//int addDBNameToList(const char *);
-	//char databaseListFile[15];
 };
 
 int main()
@@ -205,7 +220,7 @@ int clientFile::createDatabase(void)
 		return 0;
 	}
 
-	Account blankClient{ 0, "", "", 0.0 };
+	Account blankClient = { 0, "", "", 0.0 };
 
 	for (int i = 0; i < 100; i++)
 	{
@@ -224,8 +239,20 @@ int clientFile::updateRecord(fstream &file)
 {
 	Account client;
 
-	cout << "Please, enter client data:" << endl;
+	cout << "Please, enter client data (or 0 - to finish):" << endl;
 	cout << "number: \n? "; cin >> client.acctNum;
+
+	// if client.acctNum has an incorrect value
+	while (0 > client.acctNum || client.acctNum >= 100)
+	{
+		cout << "The value \"" << client.acctNum << "\"of the \"number\" field isn't correct." << endl
+			<< "Please, enter correct value (or 0 - to finish)." << endl << "? ";
+		cin >> client.acctNum;
+
+		if (client.acctNum == 0)
+			return 1;
+	}
+
 	cout << "last name: \n? "; cin >> client.lastName;
 	cout << "first name: \n? "; cin >> client.firstName;
 	cout << "balance: \n? "; cin >> client.balance;
@@ -233,6 +260,8 @@ int clientFile::updateRecord(fstream &file)
 	//file.seekp(0, ios::beg);
 	file.seekp((client.acctNum - 1) * sizeof(Account));
 	file.write((char *)&client, sizeof(Account));
+
+	cout << "OK. The record " << client.acctNum << " was updated successfully" << endl;
 
 	system("pause");
 	return 0;
@@ -253,7 +282,7 @@ int clientFile::showRecord(fstream &file)
 	if (clientRecord.acctNum != 0)
 	{
 		cout << "OUTPUT LINE(): " << endl;
-		outputLine(clientRecord);
+		//outputLine(clientRecord);
 		cout << "\nClient record:" << endl
 			<< "       num = " << clientRecord.acctNum << endl
 			<< " last name = " << clientRecord.lastName << endl
@@ -264,6 +293,8 @@ int clientFile::showRecord(fstream &file)
 	{
 		cout << "The record is empty" << endl;
 	}
+
+	outputLine(clientRecord);
 	
 	system("pause");
 	return 0;
